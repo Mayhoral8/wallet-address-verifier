@@ -35,15 +35,15 @@ credentials = {};
 const addWalletAddress = async (discordUid, address, username) => {
   const doc = await WalletsModel.findOne({ discordUid });
   if (doc?._doc.addresses.includes(address)) {
-    console.log('yh');
     return { success: false, message: 'address verified before.' };
-  }
-  await WalletsModel.findOneAndUpdate(
-    { discordUid },
-    { $push: { addresses: address }, $set: { username: username } },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
-  return { success: true };
+  }else{
+    await WalletsModel.findOneAndUpdate(
+      { discordUid },
+      { $push: { addresses: address }, $set: { username: username } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      return { success: true };
+    }
 };
 
 const createLink = async (discordUid) => {
@@ -79,7 +79,6 @@ const createLink = async (discordUid) => {
         { id: req.query.id, used: false },
         { $set: { used: true } }
       );
-      console.log(doc);
       const address = req.query.address;
       const username = req.query.username;
       const discordId = req.query.discordID;
