@@ -35,6 +35,7 @@ credentials = {};
 const addWalletAddress = async (discordUid, address, username) => {
   const doc = await WalletsModel.findOne({ discordUid });
   if (doc?._doc.addresses.includes(address)) {
+    console.log('yh');
     return { success: false };
   }
   await WalletsModel.findOneAndUpdate(
@@ -125,7 +126,7 @@ const createLink = async (discordUid) => {
       const message = await channel.messages.fetch();
       if (message.size === 0) {
         await channel.send({
-          content: "Click to verify your wallet",
+          content: "Click to verify your wallet\n nn",
           components: [verifyButton],
         });
       }
@@ -179,7 +180,7 @@ const createLink = async (discordUid) => {
     if (customId === "verify") {
       await interaction.reply({
         content:
-          "Please enter your wallet address:\n (note that your reply will be immediately deleted to protect your privacy).",
+          "Please enter your wallet address:\n (action expires in 1 min).",
         ephemeral: true,
       });
 
@@ -191,18 +192,7 @@ const createLink = async (discordUid) => {
       });
 
       collector.on("collect", async (msg) => {
-        console.log("Wallet address received:", msg.content);
-        const user = msg.author;
-        const channel = msg.channel;
-        try {
-          const messages = await channel.messages.fetch({ limit: 100 }); // Fetch the last 100 messages in the channel
-          const userMessages = messages.filter(
-            (msg) => msg.author.id === user.id
-          );
-          await Promise.all(userMessages.map((msg) => msg.delete())); // Delete all messages by the user
-        } catch (err) {
-          console.log(err);
-        }
+        console.log("Wallet address received:", msg.content); 
         collector.stop();
         const id = await createLink(msg.author.id);
         const linkUrl = `${url}?id=${id}&address=${msg.content}&username=${msg.author.username}&discordID=${msg.author.id}`;
@@ -215,13 +205,34 @@ const createLink = async (discordUid) => {
       collector.on("end", (collected) => {
         if (collected.size === 0) {
           interaction.editReply({
-            content: "You did not provide a wallet address.",
+            content: "You did not provide a wallet address.\n click the verify button again",
             ephemeral: true,
           });
         }
       });
     }
   });
+
+  // automatically delete any random message
+  client.on("messageCreate", async (message) => {
+
+      const user = message.author; // You can change this to the user you want to delete messages from
+      const channel = message.channel;
+  
+      try {
+        const messages = await channel.messages.fetch({ limit: 100 }); // Fetch the last 100 messages in the channel
+        const userMessages = messages.filter((msg) => msg.author.id === user.id);
+  
+        await Promise.all(userMessages.map((msg) => msg.delete())); // Delete all messages by the user
+  
+      } catch (error) {
+        console.error("Failed to delete messages:", error);
+        message.reply("Failed to delete messages.");
+      }
+
+  });
+  
+
 
   client.login(discordKey);
 })();
