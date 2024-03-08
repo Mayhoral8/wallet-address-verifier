@@ -152,39 +152,8 @@ const createLink = async (discordUid) => {
 
     const { commandName, options } = interaction;
 
-    if (commandName === "add-wallet") {
-      const id = uuidv4();
-      const linkUrl = `${url}?id=${id}`;
-
-      try {
-        await interaction.reply({
-          content: `A link to verify an address has been dmed to you. Please note that it expires after 1 hour.\n${linkUrl}`,
-          ephemeral: true,
-        });
-      } catch (error) {
-        console.error("Could not send DM to user:", error);
-        await interaction.reply({
-          content:
-            "Could not send you a DM with the verification link. Please ensure your DMs are open.",
-          ephemeral: true,
-        });
-      }
-    } else if (commandName === "addresses-of") {
-      const user = options.getUser("user");
-
-      if (!user) {
-        await interaction.reply({
-          content: "User not found.",
-          ephemeral: true,
-        });
-        return;
-      }
-
-      // Your logic to fetch and send user's addresses
-    } else if (commandName === "remove-addresses") {
-      // Your logic to remove addresses
-    }
   });
+
 
   client.on("interactionCreate", async (interaction) => {
     if (!interaction.isButton()) return;
@@ -228,23 +197,23 @@ const createLink = async (discordUid) => {
   });
 
   // automatically delete any random message
-  client.on("messageCreate", async (message) => {
+  // client.on("messageCreate", async (message) => {
 
-      const user = message.author; // You can change this to the user you want to delete messages from
-      const channel = message.channel;
+  //     const user = message.author; // You can change this to the user you want to delete messages from
+  //     const channel = message.channel;
   
-      try {
-        const messages = await channel.messages.fetch({ limit: 100 }); // Fetch the last 100 messages in the channel
-        const userMessages = messages.filter((msg) => msg.author.id === user.id);
+  //     try {
+  //       const messages = await channel.messages.fetch({ limit: 100 }); // Fetch the last 100 messages in the channel
+  //       const userMessages = messages.filter((msg) => msg.author.id === user.id);
   
-        await Promise.all(userMessages.map((msg) => msg.delete())); // Delete all messages by the user
+  //       await Promise.all(userMessages.map((msg) => msg.delete())); // Delete all messages by the user
   
-      } catch (error) {
-        console.error("Failed to delete messages:", error);
-        message.reply("Failed to delete messages.");
-      }
+  //     } catch (error) {
+  //       console.error("Failed to delete messages:", error);
+  //       message.reply("Failed to delete messages.");
+  //     }
 
-  });
+  // });
   
 
 
