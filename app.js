@@ -34,7 +34,7 @@ credentials = {};
 // }
 const addWalletAddress = async (discordUid, address, username) => {
   const doc = await WalletsModel.findOne({ discordUid });
-  console.log(doc?._doc.addresses.includes(address));
+  console.log(`37- ${doc?._doc.addresses.includes(address)}`);
   if (doc?._doc.addresses.includes(address)) {
     console.log("Addresses in document:", doc?._doc.addresses);
     console.log("Address to check:", address);
