@@ -36,7 +36,7 @@ const addWalletAddress = async (discordUid, address, username) => {
   const doc = await WalletsModel.findOne({ discordUid });
   console.log(`37- ${doc?._doc.addresses.includes(address)}`);
   for(const data of doc){
-  if(data == address){
+  if(data === address){
     return { success: false, message: 'address verified before.' };
   }else{
     await WalletsModel.findOneAndUpdate(
