@@ -34,7 +34,6 @@ let determinant = ''
 //     "utf8"
 //   );
 // }
-const locks = new Map();
 
 const addWalletAddress = async (discordUid, address, username, counter) => {
   const doc = await WalletsModel.findOne({ discordUid });
@@ -82,14 +81,15 @@ const createLink = async (discordUid) => {
 
 
     app.get("/verify", async (req, res) => {
+      const locks = new Map();
       const lockKey = req.query.id;
-      if (locks.has(lockKey)) {
+      if (locks.get('queryId')) {
         res.send({ locked: true });
         return;
       }
     
-      locks.add(lockKey);
-    
+      locks.set('queryId', lockKey);
+      console.log(locks);
       try {
         const doc = await LinkUsedModel.findOneAndUpdate(
           { id: req.query.id, used: false },
@@ -98,6 +98,7 @@ const createLink = async (discordUid) => {
         const address = req.query.address;
         const username = req.query.username;
         const discordId = req.query.discordID;
+        
     
         const ret = await addWalletAddress(discordId, address, username);
     
@@ -165,7 +166,6 @@ const createLink = async (discordUid) => {
     const { customId } = interaction;
 
     if (customId === "verify") {
-      console.log("prompt point");
       await interaction.reply({
         content:
           "Please enter your wallet address:\n (action expires in 1 min).",
@@ -184,7 +184,7 @@ const createLink = async (discordUid) => {
         collector.stop();
         const id = await createLink(msg.author.id);
         console.log('collection point');
-        const linkUrl = `${url}?id=${id}&address=${msg.content}&username=${msg.author.username}&discordID=${msg.author.id}`;
+        const linkUrl = `${'http://localhost:5000/verify'}?id=${id}&address=${msg.content}&username=${msg.author.username}&discordID=${msg.author.id}`;
         await interaction.followUp({
           content: `Click this link to verify your wallet address. Please note that it expires after 1 hour\n ${linkUrl}`,
           ephemeral: true,
@@ -201,6 +201,7 @@ const createLink = async (discordUid) => {
       });
     }
   });
+
 
   // automatically delete any random message
   // client.on("messageCreate", async (message) => {
