@@ -36,7 +36,7 @@ let determinant = ''
 // }
 
 const addWalletAddress = async (discordUid, address, username, counter) => {
-  // const doc = await WalletsModel.findOne({ discordUid });
+  const doc = await WalletsModel.findOne({ discordUid });
   console.log(`37- ${doc?._doc.addresses.includes(address)}`);
   console.log(determinant);
   // if(doc?._doc.addresses.includes(address) === false)
@@ -101,9 +101,10 @@ const createLink = async (discordUid) => {
         const discordId = req.query.discordID;
 
     
-        const ret = await addWalletAddress(discordId, address, username);
+        // const ret = await addWalletAddress(discordId, address, username);
     
-        res.send(ret);
+        // res.send(ret);
+        res.send({message: "ok"})
       } catch (err) {
         res.send({ invalid: true });
         console.error(err);
@@ -113,9 +114,9 @@ const createLink = async (discordUid) => {
     });
     
 
-  app.listen(httpsPort, () => {
-    console.log(`now listening on port ${httpsPort}`);
-  });
+  // app.listen(httpsPort, () => {
+  //   console.log(`now listening on port ${httpsPort}`);
+  // });
 
   const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
