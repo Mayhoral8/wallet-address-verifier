@@ -36,25 +36,26 @@ let determinant = ''
 // }
 
 const addWalletAddress = async (discordUid, address, username, counter) => {
-  const doc = await WalletsModel.findOne({ discordUid });
+  // const doc = await WalletsModel.findOne({ discordUid });
   console.log(`37- ${doc?._doc.addresses.includes(address)}`);
   console.log(determinant);
-  if(doc?._doc.addresses.includes(address) === false)
-  {
-      determinant = 'cop'
-  }
-  if (doc?._doc.addresses.includes(address)) {
-    console.log("Addresses in document:", doc?._doc.addresses);
-    console.log("Address to check:", address);
-    return { success: false, message: 'address verified before.' };
-  }else{
-    await WalletsModel.findOneAndUpdate(
-      { discordUid },
-      { $push: { addresses: address }, $set: { username: username } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-      return  { success: true };
-    }
+  // if(doc?._doc.addresses.includes(address) === false)
+  // {
+  //     determinant = 'cop'
+  // }
+  // if (doc?._doc.addresses.includes(address)) {
+  //   console.log("Addresses in document:", doc?._doc.addresses);
+  //   console.log("Address to check:", address);
+  //   return { success: false, message: 'address verified before.' };
+  // }
+  // if(determinant === 'cop'){
+  //   await WalletsModel.findOneAndUpdate(
+  //     { discordUid },
+  //     { $push: { addresses: address }, $set: { username: username } },
+  //     { upsert: true, new: true, setDefaultsOnInsert: true }
+  //     );
+  //     return  { success: true };
+  //   }
 };
 
 
