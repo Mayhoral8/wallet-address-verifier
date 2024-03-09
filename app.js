@@ -39,23 +39,22 @@ const addWalletAddress = async (discordUid, address, username, counter) => {
   const doc = await WalletsModel.findOne({ discordUid });
   console.log(`37- ${doc?._doc.addresses.includes(address)}`);
   console.log(determinant);
-  // if(doc?._doc.addresses.includes(address) === false)
-  // {
-  //     determinant = 'cop'
-  // }
-  // if (doc?._doc.addresses.includes(address)) {
-  //   console.log("Addresses in document:", doc?._doc.addresses);
-  //   console.log("Address to check:", address);
-  //   return { success: false, message: 'address verified before.' };
-  // }
-  // if(determinant === 'cop'){
-  //   await WalletsModel.findOneAndUpdate(
-  //     { discordUid },
-  //     { $push: { addresses: address }, $set: { username: username } },
-  //     { upsert: true, new: true, setDefaultsOnInsert: true }
-  //     );
-  //     return  { success: true };
-  //   }
+
+  if (doc?._doc.addresses.includes(address)) {
+    console.log("Addresses in document:", doc?._doc.addresses);
+    console.log("Address to check:", address);
+    const response = 'Address Verified Before.❌' 
+    return response;
+  }
+  else{
+    await WalletsModel.findOneAndUpdate(
+      { discordUid },
+      { $push: { addresses: address }, $set: { username: username } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      const response = 'Address successfully verified!🎉' 
+      return response;
+    }
 };
 
 
@@ -81,42 +80,42 @@ const createLink = async (discordUid) => {
     });
 
 
-    app.get("/verify", async (req, res) => {
-      const locks = new Map();
-      const lockKey = req.query.id;
-      if (locks.get('queryId')) {
-        res.send({ locked: true });
-        return;
-      }
+    // app.get("/verify", async (req, res) => {
+    //   const locks = new Map();
+    //   const lockKey = req.query.id;
+    //   if (locks.get('queryId')) {
+    //     res.send({ locked: true });
+    //     return;
+    //   }
     
-      locks.set('queryId', lockKey);
-      console.log(locks);
-      try {
-        const doc = await LinkUsedModel.findOneAndUpdate(
-          { id: req.query.id, used: false },
-          { $set: { used: true } }
-        );
-        const address = req.query.address;
-        const username = req.query.username;
-        const discordId = req.query.discordID;
+    //   locks.set('queryId', lockKey);
+    //   console.log(locks);
+    //   try {
+    //     const doc = await LinkUsedModel.findOneAndUpdate(
+    //       { id: req.query.id, used: false },
+    //       { $set: { used: true } }
+    //     );
+    //     const address = req.query.address;
+    //     const username = req.query.username;
+    //     const discordId = req.query.discordID;
 
     
-        // const ret = await addWalletAddress(discordId, address, username);
+    //     // const ret = await addWalletAddress(discordId, address, username);
     
-        // res.send(ret);
-        res.send({message: "ok"})
-      } catch (err) {
-        res.send({ invalid: true });
-        console.error(err);
-      } finally {
-        locks.delete(lockKey);
-      }
-    });
+    //     // res.send(ret);
+    //     res.send({message: "ok"})
+    //   } catch (err) {
+    //     res.send({ invalid: true });
+    //     console.error(err);
+    //   } finally {
+    //     locks.delete(lockKey);
+    //   }
+    // });
     
 
-  // app.listen(httpsPort, () => {
-  //   console.log(`now listening on port ${httpsPort}`);
-  // });
+  app.listen(httpsPort, () => {
+    console.log(`now listening on port ${httpsPort}`);
+  });
 
   const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
@@ -164,7 +163,7 @@ const createLink = async (discordUid) => {
 
   client.on("interactionCreate", async (interaction) => {
     if (!interaction.isButton()) return;
-
+    let dbResponse = ''
     const { customId } = interaction;
 
     if (customId === "verify") {
@@ -185,13 +184,20 @@ const createLink = async (discordUid) => {
         console.log("Wallet address received:", msg.content); 
         collector.stop();
         const id = await createLink(msg.author.id);
-        console.log('collection point');
-        const linkUrl = `${url}?id=${id}&address=${msg.content}&username=${msg.author.username}&discordID=${msg.author.id}`;
+         dbResponse = await addWalletAddress(discordId, address, username);
         await interaction.followUp({
-          content: `Click this link to verify your wallet address. Please note that it expires after 1 hour\n ${linkUrl}`,
+          content: `Verification in process, please wait...`,
           ephemeral: true,
         });
+        await interaction.followUp({
+          content: dbResponse,
+          ephemeral: true,
+        })
       });
+      // await interaction.reply({
+      //   content: dbResponse,
+      //   ephemeral: true,
+      // });
 
       collector.on("end", (collected) => {
         if (collected.size === 0) {
@@ -206,23 +212,23 @@ const createLink = async (discordUid) => {
 
 
   // automatically delete any random message
-  // client.on("messageCreate", async (message) => {
+  client.on("messageCreate", async (message) => {
 
-  //     const user = message.author; // You can change this to the user you want to delete messages from
-  //     const channel = message.channel;
+      const user = message.author; // You can change this to the user you want to delete messages from
+      const channel = message.channel;
   
-  //     try {
-  //       const messages = await channel.messages.fetch({ limit: 100 }); // Fetch the last 100 messages in the channel
-  //       const userMessages = messages.filter((msg) => msg.author.id === user.id);
+      try {
+        const messages = await channel.messages.fetch({ limit: 100 }); // Fetch the last 100 messages in the channel
+        const userMessages = messages.filter((msg) => msg.author.id === user.id);
   
-  //       await Promise.all(userMessages.map((msg) => msg.delete())); // Delete all messages by the user
+        await Promise.all(userMessages.map((msg) => msg.delete())); // Delete all messages by the user
   
-  //     } catch (error) {
-  //       console.error("Failed to delete messages:", error);
-  //       message.reply("Failed to delete messages.");
-  //     }
+      } catch (error) {
+        console.error("Failed to delete messages:", error);
+        message.reply("Failed to delete messages.");
+      }
 
-  // });
+  });
   
 
 
