@@ -53,7 +53,7 @@ const addWalletAddress = async (discordUid, address, username, counter) => {
       { $push: { addresses: address }, $set: { username: username } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
       );
-      res.send( { success: true });
+      return  { success: true };
     }
 };
 
