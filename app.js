@@ -35,27 +35,24 @@ let determinant = ''
 //   );
 // }
 
-const addWalletAddress = async (discordUid, address, username, counter) => {
-  const doc = await WalletsModel.findOne({ discordUid });
-  console.log(`37- ${doc?._doc.addresses.includes(address)}`);
-  console.log(determinant);
-
-  if (doc?._doc.addresses.includes(address)) {
-    console.log("Addresses in document:", doc?._doc.addresses);
-    console.log("Address to check:", address);
-    const response = 'Address Verified Before.❌' 
-    return response;
-  }
-  else{
+const addWalletAddress = async (discordUid, address, username) => {
+  try {
     await WalletsModel.findOneAndUpdate(
-      { discordUid },
-      { $push: { addresses: address }, $set: { username: username } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-      const response = 'Address successfully verified!🎉' 
-      return response;
+        { discordUid },
+        { $push: { addresses: address }, $set: { username: username } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    const response = 'Address succesfully Verified.🎉' ;
+    return response;
+} catch (error) {
+    if (error.code === 11000) {
+        const response = 'Address Verified Before.❌' ;
+        return response;
     }
+    throw error;
+}
 };
+
 
 
 
@@ -184,13 +181,12 @@ const createLink = async (discordUid) => {
         console.log("Wallet address received:", msg.content); 
         collector.stop();
         const id = await createLink(msg.author.id);
-         dbResponse = await addWalletAddress(discordId, address, username);
         await interaction.followUp({
           content: `Verification in process, please wait...`,
           ephemeral: true,
         });
         await interaction.followUp({
-          content: dbResponse,
+          content: await addWalletAddress(id, msg.content, msg.author.username),
           ephemeral: true,
         })
       });
@@ -216,6 +212,7 @@ const createLink = async (discordUid) => {
 
       const user = message.author; // You can change this to the user you want to delete messages from
       const channel = message.channel;
+      
   
       try {
         const messages = await channel.messages.fetch({ limit: 100 }); // Fetch the last 100 messages in the channel
