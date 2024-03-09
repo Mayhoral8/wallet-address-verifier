@@ -46,7 +46,9 @@ const addWalletAddress = async (discordUid, address, username, counter) => {
     console.log("Addresses in document:", doc?._doc.addresses);
     console.log("Address to check:", address);
     return { success: false, message: 'address verified before.' };
-  }else if(determinant === 'cop'){
+  }
+  
+  if(determinant === 'cop'){
     console.log('pop');
     await WalletsModel.findOneAndUpdate(
       { discordUid },
