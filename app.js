@@ -14,6 +14,7 @@ key = "387b92702efe847bedad27c6a9fc9055e30dcb0af9e3bbe3e5de6b638a5d6aa";
 AppId = "1214627587460956220";
 let credentials;
 credentials = {};
+let count = 0;
 
 // if (isDev) {
 //   credentials.key = fs.readFileSync("./sslcert/cert.key", "utf8");
@@ -32,9 +33,10 @@ credentials = {};
 //     "utf8"
 //   );
 // }
-const addWalletAddress = async (discordUid, address, username) => {
+const addWalletAddress = async (discordUid, address, username, counter) => {
   const doc = await WalletsModel.findOne({ discordUid });
   console.log(`37- ${doc?._doc.addresses.includes(address)}`);
+  console.log(counter);
   if (doc?._doc.addresses.includes(address)) {
     console.log("Addresses in document:", doc?._doc.addresses);
     console.log("Address to check:", address);
@@ -85,10 +87,10 @@ const createLink = async (discordUid) => {
       const address = req.query.address;
       const username = req.query.username;
       const discordId = req.query.discordID;
-
+      count++
       console.log(discordId);
 
-      const ret = await addWalletAddress(discordId, address, username);
+      const ret = await addWalletAddress(discordId, address, username, count);
     //   const doc2 = await WalletsModel.findOne({ discordId });
     // console.log(`37- ${doc2?._doc.addresses.includes(address)}`);
     // if (doc2?._doc.addresses.includes(address)) {
