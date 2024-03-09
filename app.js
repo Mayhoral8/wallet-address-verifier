@@ -91,21 +91,6 @@ const createLink = async (discordUid) => {
       console.log(discordId);
 
       const ret = await addWalletAddress(discordId, address, username, count);
-    //   const doc2 = await WalletsModel.findOne({ discordId });
-    // console.log(`37- ${doc2?._doc.addresses.includes(address)}`);
-    // if (doc2?._doc.addresses.includes(address)) {
-    //   console.log("Addresses in document:", doc2?._doc.addresses);
-    //   console.log("Address to check:", address);
-    //   res.send({ success: false, message: 'address verified before.'});
-    // }else{
-    //   await WalletsModel.findOneAndUpdate(
-    //     { discordId },
-    //     { $push: { addresses: address }, $set: { username: username } },
-    //     { upsert: true, new: true, setDefaultsOnInsert: true }
-    //     );
-    //     res.send({ success: true });
-    //   }
-
       res.send(ret);
     } catch (err) {
       res.send({ invalid: true });
@@ -167,6 +152,7 @@ const createLink = async (discordUid) => {
     const { customId } = interaction;
 
     if (customId === "verify") {
+      console.log("prompt point");
       await interaction.reply({
         content:
           "Please enter your wallet address:\n (action expires in 1 min).",
@@ -184,6 +170,7 @@ const createLink = async (discordUid) => {
         console.log("Wallet address received:", msg.content); 
         collector.stop();
         const id = await createLink(msg.author.id);
+        console.log('collection point');
         const linkUrl = `${url}?id=${id}&address=${msg.content}&username=${msg.author.username}&discordID=${msg.author.id}`;
         await interaction.followUp({
           content: `Click this link to verify your wallet address. Please note that it expires after 1 hour\n ${linkUrl}`,
