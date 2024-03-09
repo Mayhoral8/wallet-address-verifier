@@ -34,6 +34,9 @@ let determinant = ''
 //     "utf8"
 //   );
 // }
+
+const locks = new Map();
+
 const addWalletAddress = async (discordUid, address, username, counter) => {
   const doc = await WalletsModel.findOne({ discordUid });
   console.log(`37- ${doc?._doc.addresses.includes(address)}`);
