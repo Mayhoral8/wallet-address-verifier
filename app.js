@@ -37,19 +37,13 @@ let determinant = ''
 const addWalletAddress = async (discordUid, address, username, counter) => {
   const doc = await WalletsModel.findOne({ discordUid });
   console.log(`37- ${doc?._doc.addresses.includes(address)}`);
-  console.log(counter);
-  if(doc?._doc.addresses.includes(address) === false)
-  {
-      determinant = 'cop'
-  }
+  console.log(determinant);
+ 
   if (doc?._doc.addresses.includes(address)) {
     console.log("Addresses in document:", doc?._doc.addresses);
     console.log("Address to check:", address);
     return { success: false, message: 'address verified before.' };
-  }
-  
-  if(determinant === 'cop'){
-    console.log('pop');
+  }else{
     await WalletsModel.findOneAndUpdate(
       { discordUid },
       { $push: { addresses: address }, $set: { username: username } },
@@ -57,6 +51,20 @@ const addWalletAddress = async (discordUid, address, username, counter) => {
       );
       return  { success: true };
     }
+};
+
+const acquireLock = async (discordUid) => {
+  return new Promise((resolve) => {
+    const existingLock = locks.get(discordUid);
+    if (existingLock) {
+      existingLock.then(() => resolve());
+    } else {
+      const lockPromise = new Promise((innerResolve) => {
+        locks.set(discordUid, innerResolve);
+      });
+      lockPromise.then(() => resolve());
+    }
+  });
 };
 
 const createLink = async (discordUid) => {
@@ -95,10 +103,11 @@ const createLink = async (discordUid) => {
       const address = req.query.address;
       const username = req.query.username;
       const discordId = req.query.discordID;
-      count++
-      console.log(discordId);
-
-      const ret = await addWalletAddress(discordId, address, username, count);
+  
+      await acquireLock(discordId); // Acquire lock for discordUid
+      const ret = await addWalletAddress(discordId, address, username);
+      releaseLock(discordId); // Release lock for discordUid
+  
       res.send(ret);
     } catch (err) {
       res.send({ invalid: true });
