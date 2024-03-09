@@ -33,24 +33,24 @@ let count = 0;
 //     "utf8"
 //   );
 // }
-const addWalletAddress = async (discordUid, address, username, counter) => {
-  const doc = await WalletsModel.findOne({ discordUid });
-  console.log(`37- ${doc?._doc.addresses.includes(address)}`);
-  console.log(counter);
-  if (doc?._doc.addresses.includes(address)) {
-    console.log("Addresses in document:", doc?._doc.addresses);
-    console.log("Address to check:", address);
-    return { success: false, message: 'address verified before.' };
-  }else if(!doc?._doc.addresses.includes(address)){
-    console.log('pop');
-    await WalletsModel.findOneAndUpdate(
-      { discordUid },
-      { $push: { addresses: address }, $set: { username: username } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-      return { success: true };
-    }
-};
+// const addWalletAddress = async (discordUid, address, username, counter) => {
+//   const doc = await WalletsModel.findOne({ discordUid });
+//   console.log(`37- ${doc?._doc.addresses.includes(address)}`);
+//   console.log(counter);
+//   if (doc?._doc.addresses.includes(address)) {
+//     console.log("Addresses in document:", doc?._doc.addresses);
+//     console.log("Address to check:", address);
+//     return { success: false, message: 'address verified before.' };
+//   }else if(!doc?._doc.addresses.includes(address)){
+//     console.log('pop');
+//     await WalletsModel.findOneAndUpdate(
+//       { discordUid },
+//       { $push: { addresses: address }, $set: { username: username } },
+//       { upsert: true, new: true, setDefaultsOnInsert: true }
+//       );
+//       res.send({ success: true });
+//     }
+// };
 
 const createLink = async (discordUid) => {
   const id = uuidv4();
@@ -88,16 +88,33 @@ const createLink = async (discordUid) => {
       const address = req.query.address;
       const username = req.query.username;
       const discordId = req.query.discordID;
-      count++
-      console.log(discordId);
-
-      const ret = await addWalletAddress(discordId, address, username, count);
+  
+      const addWalletAddress = async (discordUid, address, username) => {
+        const doc = await WalletsModel.findOne({ discordUid });
+        console.log(`37- ${doc?._doc.addresses.includes(address)}`);
+        if (doc?._doc.addresses.includes(address)) {
+          console.log("Addresses in document:", doc?._doc.addresses);
+          console.log("Address to check:", address);
+          return { success: false, message: 'address verified before.' };
+        } else {
+          await WalletsModel.findOneAndUpdate(
+            { discordUid },
+            { $push: { addresses: address }, $set: { username: username } },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
+          return { success: true };
+        }
+      };
+  
+      const ret = await addWalletAddress(discordId, address, username);
+  
       res.send(ret);
     } catch (err) {
       res.send({ invalid: true });
       console.error(err);
     }
   });
+  
 
   app.listen(httpsPort, () => {
     console.log(`now listening on port ${httpsPort}`);
