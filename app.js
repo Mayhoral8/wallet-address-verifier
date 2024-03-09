@@ -180,7 +180,7 @@ const createLink = async (discordUid) => {
       collector.on("collect", async (msg) => {
         console.log("Wallet address received:", msg.content); 
         collector.stop();
-        const id = await createLink(msg.author.id);
+        const id = msg.author.id;
         await interaction.followUp({
           content: `Verification in process, please wait...`,
           ephemeral: true,
