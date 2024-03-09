@@ -34,14 +34,16 @@ let determinant = ''
 //     "utf8"
 //   );
 // }
-
 const locks = new Map();
 
 const addWalletAddress = async (discordUid, address, username, counter) => {
   const doc = await WalletsModel.findOne({ discordUid });
   console.log(`37- ${doc?._doc.addresses.includes(address)}`);
   console.log(determinant);
- 
+  if(doc?._doc.addresses.includes(address) === false)
+  {
+      determinant = 'cop'
+  }
   if (doc?._doc.addresses.includes(address)) {
     console.log("Addresses in document:", doc?._doc.addresses);
     console.log("Address to check:", address);
@@ -56,19 +58,7 @@ const addWalletAddress = async (discordUid, address, username, counter) => {
     }
 };
 
-const acquireLock = async (discordUid) => {
-  return new Promise((resolve) => {
-    const existingLock = locks.get(discordUid);
-    if (existingLock) {
-      existingLock.then(() => resolve());
-    } else {
-      const lockPromise = new Promise((innerResolve) => {
-        locks.set(discordUid, innerResolve);
-      });
-      lockPromise.then(() => resolve());
-    }
-  });
-};
+
 
 const createLink = async (discordUid) => {
   const id = uuidv4();
@@ -90,33 +80,36 @@ const createLink = async (discordUid) => {
       console.log("connection failed!");
     });
 
-  //   const app = express();
-  //   if (isDev) {
-  //     app.use(cors());
-  //   }
 
-  //   if (!isDev) app.use(express.static("../frontend/dist"));
-
-  app.get("/verify", async (req, res) => {
-    try {
-      const doc = await LinkUsedModel.findOneAndUpdate(
-        { id: req.query.id, used: false },
-        { $set: { used: true } }
-      );
-      const address = req.query.address;
-      const username = req.query.username;
-      const discordId = req.query.discordID;
-  
-      await acquireLock(discordId); // Acquire lock for discordUid
-      const ret = await addWalletAddress(discordId, address, username);
-      releaseLock(discordId); // Release lock for discordUid
-  
-      res.send(ret);
-    } catch (err) {
-      res.send({ invalid: true });
-      console.error(err);
-    }
-  });
+    app.get("/verify", async (req, res) => {
+      const lockKey = req.query.id;
+      if (locks.has(lockKey)) {
+        res.send({ locked: true });
+        return;
+      }
+    
+      locks.add(lockKey);
+    
+      try {
+        const doc = await LinkUsedModel.findOneAndUpdate(
+          { id: req.query.id, used: false },
+          { $set: { used: true } }
+        );
+        const address = req.query.address;
+        const username = req.query.username;
+        const discordId = req.query.discordID;
+    
+        const ret = await addWalletAddress(discordId, address, username);
+    
+        res.send(ret);
+      } catch (err) {
+        res.send({ invalid: true });
+        console.error(err);
+      } finally {
+        locks.delete(lockKey);
+      }
+    });
+    
 
   app.listen(httpsPort, () => {
     console.log(`now listening on port ${httpsPort}`);
