@@ -98,7 +98,7 @@ const createLink = async (discordUid) => {
         const address = req.query.address;
         const username = req.query.username;
         const discordId = req.query.discordID;
-        
+
     
         const ret = await addWalletAddress(discordId, address, username);
     
@@ -184,7 +184,7 @@ const createLink = async (discordUid) => {
         collector.stop();
         const id = await createLink(msg.author.id);
         console.log('collection point');
-        const linkUrl = `${'http://localhost:5000/verify'}?id=${id}&address=${msg.content}&username=${msg.author.username}&discordID=${msg.author.id}`;
+        const linkUrl = `${url}?id=${id}&address=${msg.content}&username=${msg.author.username}&discordID=${msg.author.id}`;
         await interaction.followUp({
           content: `Click this link to verify your wallet address. Please note that it expires after 1 hour\n ${linkUrl}`,
           ephemeral: true,
