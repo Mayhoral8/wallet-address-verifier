@@ -15,7 +15,7 @@ const myDb = mongoose.connection.useDb('Wallet-Address-Verifier')
 const LinkUsedModel = myDb.model("LinkUsed", LinkUsed);
 
 const Wallets = new Schema({
-  addresses: [{ type: String, unique: true, lowercase: true }],
+  addresses: String,
   discordUid: String,
   username: String,
 });
