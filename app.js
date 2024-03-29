@@ -1,22 +1,19 @@
 const { config } = require("dotenv");
 config();
+
 const express = require("express");
 const app = express();
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 const { JWT } = require("google-auth-library");
-const mongoose = require("mongoose");
-const { v4: uuidv4 } = require("uuid");
 const { Client, Intents } = require("discord.js");
 const {
   discordKey,
   googleSheetId,
-  dburl,
   httpsPort,
   polyScanApiKey,
   serviceAccEmail,
   serviceAccPkey,
 } = require("./config.js");
-const { WalletsModel, LinkUsedModel } = require("./models/dataModel.js");
 
 const addWalletAddress = async (discordUid, address, username) => {
   let response;
@@ -31,79 +28,57 @@ const addWalletAddress = async (discordUid, address, username) => {
       return response;
     }
   } catch (err) {
-    console.log(err);
-    return;
-  }
-
-  const wallet = await WalletsModel.findOne({ discordUid: discordUid });
-  if (!wallet) {
-    try {
-      const newRegistration = new WalletsModel({
-        discordUid,
-        addresses: address,
-        username,
-      });
-      try {
-        await newRegistration.save();
-      } catch (err) {
-        response = "could not complete verification, try again later";
-        return response;
-      }
-      response = "Address succesfully Verified.🎉";
-      const SCOPES = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive.file",
-      ];
-
-      const jwt = new JWT({
-        email: serviceAccEmail,
-        key: serviceAccPkey,
-        scopes: SCOPES,
-      });
-      const doc = new GoogleSpreadsheet(googleSheetId, jwt);
-      await doc.loadInfo(); // loads document properties and worksheets
-      const wallets = await WalletsModel.find();
-      const sheet = doc.sheetsByIndex[0];
-      for (const instance of wallets) {
-        await sheet.addRow({
-          Discord_Username: instance.username,
-          Wallet_Addresses: instance.addresses,
-        });
-      }
-
-      return response;
-    } catch (err) {
-      response = "Could not verify Address❌";
-      return response;
-    }
-  } else if (wallet && wallet.addresses !== null) {
-    response = "You already have a verified wallet address❌";
+    response = "Could not verify wallet address, try again";
     return response;
   }
-  response = "Error";
-  return response;
-};
 
-const createLink = async (discordUid) => {
-  const id = uuidv4();
-  await new LinkUsedModel({
-    id,
-    used: false,
-    discordUid,
-  }).save();
-  return id;
+  try {
+    const SCOPES = [
+      "https://www.googleapis.com/auth/spreadsheets",
+      "https://www.googleapis.com/auth/drive.file",
+    ];
+
+    const jwt = new JWT({
+      email: serviceAccEmail,
+      key: serviceAccPkey,
+      scopes: SCOPES,
+    });
+    const doc = new GoogleSpreadsheet(googleSheetId, jwt);
+    await doc.loadInfo(); // loads document properties and worksheets
+    const sheet = doc.sheetsByIndex[0];
+    const rows = await sheet.getRows();
+
+    if (rows.length === 0) {
+      const moreRows = await sheet.addRow({
+        Discord_Username: username,
+        Wallet_Addresses: address,
+        Discord_Id: discordUid,
+      });
+      response = "Address succesfully Verified.🎉";
+      return response;
+    } else {
+      for (const row of rows) {
+        if (row.get("Discord_Id") === discordUid) {
+          response = "You already have a verified Wallet Address ❌";
+          return response;
+        } else {
+          await sheet.addRow({
+            Discord_Username: username,
+            Wallet_Addresses: address,
+            Discord_Id: discordUid,
+          });
+          response = "Address succesfully Verified.🎉";
+          return response;
+        }
+      }
+    }
+  } catch (err) {
+    response = "Could not verify Address❌";
+    return response;
+  }
 };
 
 (async () => {
-  mongoose
-    .connect(dburl)
-    .then(() => {
-      console.log("connected to database!");
-    })
-    .catch(() => {
-      console.log("connection failed!");
-    });
-
   app.listen(httpsPort, () => {
     console.log(`now listening on port ${httpsPort}`);
   });
