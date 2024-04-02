@@ -1,22 +1,21 @@
-const { config } = require("dotenv");
-config();
-
 const express = require("express");
 const app = express();
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 const { JWT } = require("google-auth-library");
 const { Client, Intents } = require("discord.js");
-const {
-  discordKey,
-  googleSheetId,
+const data = require('./config.json');
+const { discordApiKey,
+  googleSheetsDocId,
   httpsPort,
   polyScanApiKey,
-  serviceAccEmail,
-  serviceAccPkey,
-} = require("./config.js");
+  googleServiceAccEmail,
+  googleServiceAccPkey} = data;
+
+ 
 
 const addWalletAddress = async (discordUid, address, username) => {
   let response;
+  //this sends a post request to the polygonscan api to check if the wallet address the user submits is valid
   try {
     const result = await fetch(
       `https://api.polygonscan.com/api?module=account&action=balance&address=${address}&apikey=${polyScanApiKey}`
@@ -32,23 +31,30 @@ const addWalletAddress = async (discordUid, address, username) => {
     return response;
   }
 
+  //this functionality setups a connection between a googlesheet document and the code 
+
+  //these scopes defines the permissions that the program has on the google sheet, which are 'read' and 'write'
   try {
     const SCOPES = [
       "https://www.googleapis.com/auth/spreadsheets",
       "https://www.googleapis.com/auth/drive.file",
     ];
 
+    //A JSON WEB TOKEN is created using the credentials from the GOOGLE SPREADSHEET API APP SERVICE ACCOUNT AUTHENTICATION.
     const jwt = new JWT({
-      email: serviceAccEmail,
-      key: serviceAccPkey,
+      email: googleServiceAccEmail,
+      key: googleServiceAccPkey,
       scopes: SCOPES,
     });
-    const doc = new GoogleSpreadsheet(googleSheetId, jwt);
+
+    
+    const doc = new GoogleSpreadsheet(googleSheetsDocId, jwt); //this creates a local instance of the already created googlesheet doc, using the sheet ID
     await doc.loadInfo(); // loads document properties and worksheets
     const sheet = doc.sheetsByIndex[0];
     const rows = await sheet.getRows();
 
-    if (rows.length === 0) {
+    
+    if (rows.length === 0) { //checks if the sheet is empty and then appends the wallet address and the username of the user
       const moreRows = await sheet.addRow({
         Discord_Username: username,
         Wallet_Addresses: address,
@@ -56,12 +62,12 @@ const addWalletAddress = async (discordUid, address, username) => {
       });
       response = "Address succesfully Verified.🎉";
       return response;
-    } else {
+    } else { 
       for (const row of rows) {
-        if (row.get("Discord_Id") === discordUid) {
+        if (row.get("Discord_Id") === discordUid) { // if sheet is not empty but the user already has a verified wallet address, the sheet isn't updated
           response = "You already have a verified Wallet Address ❌";
           return response;
-        } else {
+        } else { // if sheet is not empty and the user doesn't have a verified address, sheet is updated.
           await sheet.addRow({
             Discord_Username: username,
             Wallet_Addresses: address,
@@ -78,6 +84,7 @@ const addWalletAddress = async (discordUid, address, username) => {
   }
 };
 
+//CONNECT TO LOCALPORT + DISCORDAPI
 (async () => {
   app.listen(httpsPort, () => {
     console.log(`now listening on port ${httpsPort}`);
@@ -90,6 +97,7 @@ const addWalletAddress = async (discordUid, address, username) => {
   client.once("ready", () => {
     console.log("bot is running!");
 
+    //this creates a verify button in a channel with the name 'verify' where the channel is also a text channel
     client.guilds.cache.forEach(async (guild) => {
       const channel = guild.channels.cache.find(
         (channel) => channel.type === "GUILD_TEXT" && channel.name === "verify"
@@ -109,6 +117,7 @@ const addWalletAddress = async (discordUid, address, username) => {
         ],
       };
 
+      //this creates a short description of what the button does and also attaches the created button
       const message = await channel.messages.fetch();
       if (message.size === 0) {
         await channel.send({
@@ -119,6 +128,7 @@ const addWalletAddress = async (discordUid, address, username) => {
     });
   });
 
+  //this runs whenever the button is clicked, to begin an interaction
   client.on("interactionCreate", async (interaction) => {
     if (!interaction.isButton()) return;
     const { customId } = interaction;
@@ -164,7 +174,7 @@ const addWalletAddress = async (discordUid, address, username) => {
     }
   });
 
-  // automatically delete any random message
+  // automatically delete any message sent to the verification channel for privacy
   client.on("messageCreate", async (message) => {
     const user = message.author;
     const channel = message.channel;
@@ -186,5 +196,6 @@ const addWalletAddress = async (discordUid, address, username) => {
     }
   });
 
-  client.login(discordKey);
+  //connect to discord api using your key
+  client.login(discordApiKey);
 })();

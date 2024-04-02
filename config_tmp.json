@@ -1,0 +1,11 @@
+{
+    "discordApiKey": "YOUR_DISCORD_API_KEY_HERE",
+    "httpsPort": 5000,
+    "url": "BACKEND_SERVER_URL",
+    "polyScanApiKey": "YOUR_POLYGONSCAN_API_KEY_HERE",
+    "googleSheetId": "YOUR_GOOGLE_SHEETS_ID_HERE",
+    "googleServiceAccEmail": "wallet-address-verifier@psychic-outcome-418515.iam.gserviceaccount.com",
+    "googleServiceAccPkey": "YOUR_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_HERE",
+    "googleSheetsDocId": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID_HERE"
+}
+  
