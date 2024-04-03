@@ -3,7 +3,6 @@ const app = express();
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 const { JWT } = require("google-auth-library");
 const { Client, Intents } = require("discord.js");
-const data = require("./config.json");
 const {
   discordApiKey,
   googleSheetsDocId,
@@ -11,7 +10,7 @@ const {
   polyScanApiKey,
   googleServiceAccEmail,
   googleServiceAccPkey,
-} = data;
+} = require('./config');
 
 const addWalletAddress = async (discordUid, address, username) => {
   let response;
