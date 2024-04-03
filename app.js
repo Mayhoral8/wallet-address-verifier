@@ -185,9 +185,12 @@ const addWalletAddress = async (discordUid, address, username) => {
     console.log(typeof message.id);
     const user = message.author;
     const channel = message.channel;
+    console.log('channel');
 
-    try {
-      const messages = await channel.messages.fetch({ limit: 100 });
+    //the channel.id is the id of the verification channel and the guildId is the server id.
+    if((channel.id === '1192420646563631204' && channel.guildId === '943987429981966387') || (channel.id === '1224711848553746493' && channel.guildId === '923671926633820201')){
+      try {
+        const messages = await channel.messages.fetch({ limit: 100 });
       const userMessages = messages.filter(
         (msg) =>
           msg.author.id === user.id &&
@@ -198,6 +201,7 @@ const addWalletAddress = async (discordUid, address, username) => {
     } catch (error) {
       return;
     }
+  }
   });
 
   //connect to discord api using your key
