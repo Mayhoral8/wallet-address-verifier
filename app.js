@@ -101,37 +101,7 @@ const addWalletAddress = async (discordUid, address, username) => {
     console.log("bot is running!");
 
     //this creates a verify button in a channel with the name 'verify' where the channel is also a text channel
-    client.guilds.cache.forEach(async (guild) => {
-      const channel = guild.channels.cache.find(
-        (channel) =>
-          (channel.type === "GUILD_TEXT" &&
-            channel.name === "🔗-discord2address") ||
-          channel.name === "verify"
-      );
-
-      if (!channel) return;
-
-      const verifyButton = {
-        type: 1,
-        components: [
-          {
-            type: 2,
-            style: 1,
-            label: "Verify",
-            custom_id: "verify",
-          },
-        ],
-      };
-
-      //this creates a short description of what the button does and also attaches the created button
-      const message = await channel.messages.fetch();
-      if (message.size === 0) {
-        await channel.send({
-          content: "Click to verify your wallet\n",
-          components: [verifyButton],
-        });
-      }
-    });
+   
   });
 
   //this runs whenever the button is clicked, to begin an interaction
@@ -182,29 +152,58 @@ const addWalletAddress = async (discordUid, address, username) => {
 
   // automatically delete any message sent to the verification channel for privacy
   client.on("messageCreate", async (message) => {
-    console.log(typeof message.id);
-    const user = message.author;
+    const verifyButton = {
+      type: 1,
+      components: [
+        {
+          type: 2,
+          style: 1,
+          label: "Verify",
+          custom_id: "verify",
+        },
+      ],
+    };
+
     const channel = message.channel;
-    console.log('channel');
 
     //the channel.id is the id of the verification channel and the guildId is the server id.
-    if((channel.id === '1192420646563631204' && channel.guildId === '943987429981966387') || (channel.id === '1224711848553746493' && channel.guildId === '923671926633820201')){
+    if (
+      (channel.id === "1192420646563631204" &&
+        channel.guildId === "943987429981966387") ||
+      (channel.id === "1224711848553746493" &&
+        channel.guildId === "923671926633820201")
+    ) {
       try {
         const messages = await channel.messages.fetch({ limit: 100 });
-      const userMessages = messages.filter(
-        (msg) =>
-          msg.author.id === user.id &&
-          message.content !== "Click to verify your wallet"
-      );
+        const userMessages = messages.filter(
+          (msg) => msg.content !== "Click to verify your wallet"
+        );
 
-      await Promise.all(userMessages.map((msg) => msg.delete()));
-    } catch (error) {
-      return;
+        const defaultMessages = messages.filter((msg) => {
+          return msg.content === "Click to verify your wallet";
+        });
+
+        if (userMessages.size >= 1) {
+          if (
+            message.content.startsWith("verify!") &&
+            defaultMessages.size < 1
+          ) {
+            console.log("s");
+            await channel.send({
+              content: "Click to verify your wallet\n",
+              components: [verifyButton],
+            });
+            return;
+          }
+        }
+
+        await Promise.all(userMessages.map((msg) => msg.delete()));
+      } catch (error) {
+        return;
+      }
     }
-  }
   });
 
   //connect to discord api using your key
   client.login(discordApiKey);
 })();
-1224730148780113941;
