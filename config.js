@@ -1,4 +1,4 @@
-User
+
 const {config} = require("dotenv");
 const cred = require('./psychic-outcome-418515-147d5a8ee272.json')
 config()
